@@ -37,27 +37,14 @@ outside-the-bundle way to inject into the browser chrome — CSS mods can't run
 JS, and content extensions (Tampermonkey etc.) can't reach the address bar.
 
 Because the bundle sits in `/Applications`, macOS **App Management** protection
-guards it — `sudo` alone can't write there. Pick whichever unlock you prefer.
+guards it — even `sudo` can't write there unless the process doing the write
+holds the App Management (or Full Disk Access) permission.
 
-### Option A — the installer (grant a permission once)
+### Option A — Finder (recommended, no permission grants)
 
-```sh
-sudo ./install.sh
-```
-
-If it fails with `Operation not permitted`, grant your terminal app the
-**App Management** permission (System Settings → Privacy & Security → App
-Management), restart the terminal, and re-run. App Management is scoped only to
-modifying apps — much narrower than Full Disk Access. (Full Disk Access also
-works and supersedes it, but grants far more.)
-
-`install.sh` is idempotent and auto-detects the current version folder, so the
-same command re-applies the mod. Fully quit Vivaldi (**⌘Q**) and relaunch.
-
-### Option B — Finder (no permission grant to your terminal)
-
-Finder is system-trusted to modify app bundles, so it only needs your admin
-password.
+Finder is already system-trusted to modify app bundles, so it only needs your
+admin password. **This is the method to use if you don't want to grant your
+terminal broad permissions.**
 
 1. Finder → **⌘⇧G**, paste (adjust the version number to match yours):
    ```
@@ -72,6 +59,25 @@ password.
    ```
 4. Fully quit Vivaldi (**⌘Q**) and relaunch.
 
+### Option B — the installer (requires granting a permission first)
+
+`install.sh` does the same two steps from the command line, but **only works if
+the terminal running it has the App Management permission** — otherwise it
+fails with `Operation not permitted` (App Management blocks it even under
+`sudo`). If you're fine granting that:
+
+1. System Settings → Privacy & Security → **App Management** → enable your
+   terminal app, then restart the terminal. App Management is scoped only to
+   modifying apps — much narrower than Full Disk Access (which also works but
+   grants far more).
+2. Run it:
+   ```sh
+   sudo ./install.sh
+   ```
+
+It's idempotent and auto-detects the current version folder. Fully quit Vivaldi
+(**⌘Q**) and relaunch.
+
 ## Verifying
 
 Click the address bar, type a few letters, and press **Ctrl+N** / **Ctrl+P** —
@@ -79,9 +85,9 @@ the highlight should move through the suggestions instead of the caret jumping.
 
 ## Managing / troubleshooting
 
-- **After a Vivaldi update** the bundle is rebuilt and the mod is wiped. Re-run
-  `sudo ./install.sh` (it re-detects the new version folder), or redo the
-  Finder steps with the new version number.
+- **After a Vivaldi update** the bundle is rebuilt and the mod is wiped. Redo
+  the Finder steps (Option A) with the new version number — or, if you've
+  granted the App Management permission, re-run `sudo ./install.sh`.
 - **Nothing happens after relaunch?** Enable Vivaldi's UI devtools
   (`vivaldi://experiments` → allow UI modding), open its console, run
   `window.__urlbarNavDebug = true`, then type in the address bar and press
