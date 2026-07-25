@@ -3,8 +3,11 @@
 # whenever Vivaldi updates.
 #
 # How it works: launchd watches Vivaldi's `Versions` directory. An update drops
-# a new `Versions/<new-version>` folder in there, which fires the agent, which
-# runs "Install urlbar-nav.app" in quiet (URLBAR_NAV_AUTO) mode.
+# a new `Versions/<new-version>` folder in there, which fires the agent. The
+# agent runs autowatch-run.sh (bundled in the app), which debounces the burst
+# of filesystem events an update produces -- WatchPaths fires once per event,
+# so without debouncing you'd get 5-6 back-to-back installs -- then runs
+# "Install urlbar-nav.app" once in quiet (--auto) mode.
 #
 # IMPORTANT: This only works if you have ALREADY double-clicked
 # "Install urlbar-nav.app" once and granted it App Management. The background
@@ -26,6 +29,12 @@ if [ ! -d "$APP" ]; then
   exit 1
 fi
 
+if [ ! -f "$APP/Contents/Resources/autowatch-run.sh" ]; then
+  echo "ERROR: the app is missing autowatch-run.sh (built by an older" >&2
+  echo "build-installer.sh). Rebuild it first: ./build-installer.sh" >&2
+  exit 1
+fi
+
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
 
 cat > "$PLIST" <<PLIST
@@ -37,11 +46,9 @@ cat > "$PLIST" <<PLIST
     <string>$LABEL</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/open</string>
-        <string>-a</string>
+        <string>/bin/bash</string>
+        <string>$APP/Contents/Resources/autowatch-run.sh</string>
         <string>$APP</string>
-        <string>--args</string>
-        <string>--auto</string>
     </array>
     <key>WatchPaths</key>
     <array>

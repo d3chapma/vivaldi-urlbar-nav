@@ -42,7 +42,11 @@ on run argv
 	try
 		set out to do shell script "/bin/bash " & quoted form of installer & logCmd & " && tail -n1 ~/Library/Logs/vivaldi-urlbar-nav.log"
 		if autoMode then
-			display notification "Re-applied after a Vivaldi change. Quit (Cmd+Q) & relaunch Vivaldi." with title "Vivaldi urlbar-nav"
+			-- Only notify when the mod was actually (re-)applied. Coalesced
+			-- LaunchAgent fires that find it already in place stay silent.
+			if out does not contain "no change" then
+				display notification "Re-applied after a Vivaldi change. Quit (Cmd+Q) & relaunch Vivaldi." with title "Vivaldi urlbar-nav"
+			end if
 		else
 			display dialog "urlbar-nav installed." & return & return & out & return & return & "Fully quit Vivaldi (Cmd+Q) and relaunch." buttons {"OK"} default button "OK"
 		end if
